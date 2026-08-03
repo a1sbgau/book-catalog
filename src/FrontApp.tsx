@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { AccessLevel, AppData, Book, Chapter } from './types'
+import type { AccessLevel, AppData, Book } from './types'
 import { loadData, subscribe } from './store/bookStore'
+import { countWords, flattenChapters } from './utils/contentParser'
 import './App.css'
 
 type TabKey = 'home' | 'category'
+type View =
+  | { name: 'tabs' }
+  | { name: 'detail'; bookId: string }
+  | { name: 'reader'; bookId: string; chapterId?: string }
 
 function useAppData() {
   const [data, setData] = useState<AppData>(() => loadData())
@@ -16,14 +21,6 @@ function SearchIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8" />
       <path d="m21 21-4.35-4.35" />
-    </svg>
-  )
-}
-
-function ChevronDownIcon({ open }: { open: boolean }) {
-  return (
-    <svg className={`chevron${open ? ' open' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m6 9 6 6 6-6" />
     </svg>
   )
 }
@@ -56,101 +53,37 @@ function CategoryIcon({ active }: { active: boolean }) {
   )
 }
 
-function Badge({ access }: { access: AccessLevel }) {
-  return <span className={`badge badge-${access}`}>{access}</span>
-}
-
 function accessLabel(access: AccessLevel) {
   if (access === '需权限') return '年度会员'
   if (access === '推荐') return '精选推荐'
   return '免费阅读'
 }
 
+function Cover({ book, className = '' }: { book: Book; className?: string }) {
+  if (book.cover) {
+    return <img className={`book-cover-img ${className}`} src={book.cover} alt={book.title} />
+  }
+  const hue = (book.title.charCodeAt(0) * 37) % 360
+  return (
+    <div
+      className={`book-cover-fallback ${className}`}
+      style={{ background: `linear-gradient(145deg, hsl(${hue},55%,48%), hsl(${(hue + 40) % 360},45%,32%))` }}
+    >
+      <span>{book.title.slice(0, 1)}</span>
+    </div>
+  )
+}
+
 function BookCard({ book, onClick }: { book: Book; onClick: () => void }) {
   return (
-    <button type="button" className="book-card" onClick={onClick}>
-      <div className="book-title">{book.title}</div>
-      <div className="book-meta">{accessLabel(book.access)}</div>
-      <div className="book-desc">{book.series} · {book.description}</div>
-    </button>
-  )
-}
-
-function ChapterGroup({ chapter, onSelect }: { chapter: Chapter; onSelect: (title: string) => void }) {
-  const [open, setOpen] = useState(true)
-  const hasChildren = chapter.children && chapter.children.length > 0
-
-  return (
-    <div className="chapter-group">
-      <button
-        type="button"
-        className="chapter-group-header"
-        onClick={() => {
-          if (hasChildren) setOpen((v) => !v)
-          else onSelect(chapter.title)
-        }}
-      >
-        <span>{chapter.title}</span>
-        {hasChildren && <ChevronDownIcon open={open} />}
-      </button>
-      {hasChildren && open && (
-        <div className="chapter-children">
-          {chapter.children!.map((child) => (
-            <button
-              key={child.id}
-              type="button"
-              className="chapter-item"
-              onClick={() => onSelect(child.title)}
-            >
-              <span className="chapter-dot" />
-              {child.title}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function DetailView({
-  book,
-  onBack,
-  onToast,
-}: {
-  book: Book
-  onBack: () => void
-  onToast: (msg: string) => void
-}) {
-  return (
-    <div className="detail-page">
-      <div className="detail-nav">
-        <button type="button" className="back-btn" onClick={onBack} aria-label="返回">
-          <BackIcon />
-        </button>
-        <div className="detail-nav-title">目录</div>
-      </div>
-
-      <div className="detail-hero">
+    <button type="button" className="book-card book-card-with-cover" onClick={onClick}>
+      <Cover book={book} className="card-cover" />
+      <div className="book-card-body">
         <div className="book-title">{book.title}</div>
-        <div className="book-series">{book.series}</div>
-        <div className="book-desc">{book.description}</div>
-        <div className="detail-meta">
-          <span className="detail-category">{book.category}</span>
-          <Badge access={book.access} />
-        </div>
+        <div className="book-meta">{book.author || accessLabel(book.access)}</div>
+        <div className="book-desc">{book.series} · {book.description}</div>
       </div>
-
-      <div className="chapter-section">
-        <div className="chapter-section-title">章节目录</div>
-        {book.chapters.map((ch) => (
-          <ChapterGroup
-            key={ch.id}
-            chapter={ch}
-            onSelect={(title) => onToast(`已选择：${title}`)}
-          />
-        ))}
-      </div>
-    </div>
+    </button>
   )
 }
 
@@ -163,8 +96,8 @@ function HomePage({
   onOpenBook: (b: Book) => void
   onGoCategory: () => void
 }) {
-  const recommended = books.filter((b) => b.access === '推荐').slice(0, 4)
-  const free = books.filter((b) => b.access === '免费').slice(0, 4)
+  const recommended = books.filter((b) => b.access === '推荐').slice(0, 6)
+  const free = books.filter((b) => b.access === '免费').slice(0, 6)
 
   return (
     <div className="home-page">
@@ -178,15 +111,15 @@ function HomePage({
           <h2>精选推荐</h2>
           <button type="button" className="link-btn" onClick={onGoCategory}>查看全部分类</button>
         </div>
-        <div className="home-card-list">
+        <div className="home-grid">
           {recommended.length === 0 ? (
             <div className="empty-state">暂无推荐内容</div>
           ) : (
             recommended.map((book) => (
-              <button key={book.id} type="button" className="home-book-card" onClick={() => onOpenBook(book)}>
-                <div className="home-book-cat">{book.category}</div>
-                <div className="book-title">{book.title}</div>
-                <div className="book-desc">{book.series}</div>
+              <button key={book.id} type="button" className="home-cover-card" onClick={() => onOpenBook(book)}>
+                <Cover book={book} />
+                <div className="home-cover-title">{book.title}</div>
+                <div className="home-cover-sub">{book.category}</div>
               </button>
             ))
           )}
@@ -197,15 +130,15 @@ function HomePage({
         <div className="home-section-head">
           <h2>免费阅读</h2>
         </div>
-        <div className="home-card-list">
+        <div className="home-grid">
           {free.length === 0 ? (
             <div className="empty-state">暂无免费内容</div>
           ) : (
             free.map((book) => (
-              <button key={book.id} type="button" className="home-book-card" onClick={() => onOpenBook(book)}>
-                <div className="home-book-cat">{book.category}</div>
-                <div className="book-title">{book.title}</div>
-                <div className="book-desc">{book.series}</div>
+              <button key={book.id} type="button" className="home-cover-card" onClick={() => onOpenBook(book)}>
+                <Cover book={book} />
+                <div className="home-cover-title">{book.title}</div>
+                <div className="home-cover-sub">{book.category}</div>
               </button>
             ))
           )}
@@ -287,20 +220,186 @@ function CategoryPage({
   )
 }
 
+function BookDetailPage({
+  book,
+  onBack,
+  onRead,
+}: {
+  book: Book
+  onBack: () => void
+  onRead: (chapterId?: string) => void
+}) {
+  const flat = flattenChapters(book.chapters)
+  const words = countWords(book)
+
+  return (
+    <div className="detail-page book-official">
+      <div className="detail-nav">
+        <button type="button" className="back-btn" onClick={onBack} aria-label="返回">
+          <BackIcon />
+        </button>
+        <div className="detail-nav-title">书籍详情</div>
+      </div>
+
+      <div className="official-hero">
+        <Cover book={book} className="official-cover" />
+        <div className="official-info">
+          <h1 className="official-title">{book.title}</h1>
+          <p className="official-author">{book.author || '佚名'} · {book.category}</p>
+          <p className="official-series">{book.series || '暂无丛书信息'}</p>
+          <div className="official-tags">
+            <span className={`badge badge-${book.access}`}>{accessLabel(book.access)}</span>
+            <span className="meta-chip">{flat.length} 章节</span>
+            {words > 0 && <span className="meta-chip">约 {words} 字</span>}
+          </div>
+        </div>
+      </div>
+
+      <div className="official-desc-card">
+        <h3>内容简介</h3>
+        <p>{book.description || '暂无简介'}</p>
+      </div>
+
+      <div className="official-actions">
+        <button
+          type="button"
+          className="official-primary"
+          onClick={() => onRead(flat[0]?.id)}
+          disabled={flat.length === 0}
+        >
+          开始阅读
+        </button>
+      </div>
+
+      <div className="official-toc">
+        <h3>目录</h3>
+        {flat.length === 0 ? (
+          <div className="empty-state">暂无章节，请在后台导入内容</div>
+        ) : (
+          <ul>
+            {flat.map((ch, i) => (
+              <li key={ch.id}>
+                <button type="button" onClick={() => onRead(ch.id)}>
+                  <span className="toc-index">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="toc-title">{ch.path}</span>
+                  <span className="toc-arrow">›</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function ReaderPage({
+  book,
+  chapterId,
+  onBack,
+  onChangeChapter,
+}: {
+  book: Book
+  chapterId?: string
+  onBack: () => void
+  onChangeChapter: (id: string) => void
+}) {
+  const flat = flattenChapters(book.chapters)
+  const index = Math.max(0, flat.findIndex((c) => c.id === chapterId))
+  const current = flat[index] || flat[0]
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 })
+  }, [current?.id])
+
+  if (!current) {
+    return (
+      <div className="reader-page">
+        <div className="reader-bar">
+          <button type="button" className="back-btn" onClick={onBack}><BackIcon /></button>
+          <span>{book.title}</span>
+        </div>
+        <div className="empty-state">暂无正文</div>
+      </div>
+    )
+  }
+
+  const paragraphs = (current.content || '本章暂无正文内容。\n请在管理后台编辑章节，或导入 Markdown / TXT / JSON 文件。')
+    .split(/\n+/)
+    .filter(Boolean)
+
+  return (
+    <div className="reader-page">
+      <div className="reader-bar">
+        <button type="button" className="back-btn" onClick={onBack} aria-label="返回">
+          <BackIcon />
+        </button>
+        <div className="reader-bar-title">
+          <div className="reader-book">{book.title}</div>
+          <div className="reader-chapter">{current.path}</div>
+        </div>
+      </div>
+
+      <div className="reader-body" ref={contentRef}>
+        <h2 className="reader-heading">{current.title}</h2>
+        <article className="reader-article">
+          {paragraphs.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
+        </article>
+      </div>
+
+      <div className="reader-footer">
+        <button
+          type="button"
+          className="reader-nav-btn"
+          disabled={index <= 0}
+          onClick={() => onChangeChapter(flat[index - 1].id)}
+        >
+          上一章
+        </button>
+        <span className="reader-progress">{index + 1} / {flat.length}</span>
+        <button
+          type="button"
+          className="reader-nav-btn"
+          disabled={index >= flat.length - 1}
+          onClick={() => onChangeChapter(flat[index + 1].id)}
+        >
+          下一章
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function FrontApp() {
   const data = useAppData()
   const [tab, setTab] = useState<TabKey>('category')
   const [keyword, setKeyword] = useState('')
   const [category, setCategory] = useState('全部')
-  const [selected, setSelected] = useState<Book | null>(null)
+  const [view, setView] = useState<View>({ name: 'tabs' })
   const [toast, setToast] = useState('')
   const toastTimer = useRef<number | null>(null)
+  const syncTipShown = useRef(false)
 
   useEffect(() => {
     if (category !== '全部' && !data.categories.includes(category)) {
       setCategory('全部')
     }
   }, [data.categories, category])
+
+  // 数据变更时给出轻提示（后台保存后前台自动更新）
+  useEffect(() => {
+    if (!syncTipShown.current) {
+      syncTipShown.current = true
+      return
+    }
+    if (view.name !== 'tabs') return
+    setToast('内容已同步更新')
+    if (toastTimer.current) window.clearTimeout(toastTimer.current)
+    toastTimer.current = window.setTimeout(() => setToast(''), 1500)
+  }, [data.version])
 
   const filtered = useMemo(() => {
     const q = keyword.trim().toLowerCase()
@@ -311,32 +410,45 @@ export default function FrontApp() {
         b.title.toLowerCase().includes(q) ||
         b.series.toLowerCase().includes(q) ||
         b.description.toLowerCase().includes(q) ||
+        (b.author || '').toLowerCase().includes(q) ||
         b.category.includes(q)
       return matchCat && matchKw
     })
   }, [data.books, keyword, category])
 
+  const currentBook = useMemo(() => {
+    if (view.name === 'tabs') return null
+    return data.books.find((b) => b.id === view.bookId) || null
+  }, [data.books, view])
+
   useEffect(() => {
-    window.scrollTo({ top: 0 })
-  }, [selected, tab])
+    if (view.name !== 'tabs' && !currentBook) {
+      setView({ name: 'tabs' })
+    }
+  }, [view, currentBook])
 
-  const showToast = (msg: string) => {
-    setToast(msg)
-    if (toastTimer.current) window.clearTimeout(toastTimer.current)
-    toastTimer.current = window.setTimeout(() => setToast(''), 1800)
-  }
-
-  const openBook = (book: Book) => setSelected(book)
+  const openBook = (book: Book) => setView({ name: 'detail', bookId: book.id })
 
   return (
     <div className="app-shell">
-      {selected ? (
-        <DetailView
-          book={selected}
-          onBack={() => setSelected(null)}
-          onToast={showToast}
+      {view.name === 'detail' && currentBook && (
+        <BookDetailPage
+          book={currentBook}
+          onBack={() => setView({ name: 'tabs' })}
+          onRead={(chapterId) => setView({ name: 'reader', bookId: currentBook.id, chapterId })}
         />
-      ) : (
+      )}
+
+      {view.name === 'reader' && currentBook && (
+        <ReaderPage
+          book={currentBook}
+          chapterId={view.chapterId}
+          onBack={() => setView({ name: 'detail', bookId: currentBook.id })}
+          onChangeChapter={(id) => setView({ name: 'reader', bookId: currentBook.id, chapterId: id })}
+        />
+      )}
+
+      {view.name === 'tabs' && (
         <>
           <div className="page-area">
             {tab === 'home' && (

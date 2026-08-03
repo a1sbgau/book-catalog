@@ -20,6 +20,8 @@ import {
   subscribe,
   upsertBook,
 } from '../store/bookStore'
+import { parseBookContent } from '../utils/contentParser'
+import { compressCover } from '../utils/image'
 import './Admin.css'
 
 type MenuKey = 'dashboard' | 'books' | 'categories' | 'data'
@@ -94,6 +96,7 @@ function BookDialog({
   onSave: (book: Book) => void
 }) {
   const [form, setForm] = useState<Book>(() => structuredClone(initial))
+  const [importHint, setImportHint] = useState('')
 
   const setField = <K extends keyof Book>(key: K, value: Book[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -107,35 +110,116 @@ function BookDialog({
     })
   }
 
-  const updateChild = (ci: number, childIdx: number, title: string) => {
+  const updateChild = (ci: number, childIdx: number, patch: Partial<Chapter>) => {
     setForm((prev) => {
       const chapters = [...prev.chapters]
       const children = [...(chapters[ci].children || [])]
-      children[childIdx] = { ...children[childIdx], title }
+      children[childIdx] = { ...children[childIdx], ...patch }
       chapters[ci] = { ...chapters[ci], children }
       return { ...prev, chapters }
     })
   }
 
+  const onCoverChange = async (file?: File | null) => {
+    if (!file) return
+    try {
+      const cover = await compressCover(file)
+      setField('cover', cover)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '封面上传失败')
+    }
+  }
+
+  const onImportContent = async (file?: File | null) => {
+    if (!file) return
+    try {
+      const text = await file.text()
+      const parsed = parseBookContent(text, file.name, 'auto')
+      setForm((prev) => ({
+        ...prev,
+        title: prev.title || parsed.title || prev.title,
+        series: prev.series || parsed.series || prev.series,
+        description: prev.description || parsed.description || prev.description,
+        author: prev.author || parsed.author || prev.author,
+        category: parsed.category && categories.includes(parsed.category) ? parsed.category : prev.category,
+        cover: parsed.cover || prev.cover,
+        chapters: parsed.chapters.length ? parsed.chapters : prev.chapters,
+      }))
+      setImportHint(`已解析为 ${parsed.detectedFormat}，共 ${parsed.chapters.length} 个章节`)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '内容解析失败')
+    }
+  }
+
   return (
     <div className="ry-mask" onClick={onClose}>
-      <div className="ry-dialog" onClick={(e) => e.stopPropagation()}>
+      <div className="ry-dialog ry-dialog-lg" onClick={(e) => e.stopPropagation()}>
         <div className="ry-dialog-header">
           <span>{initial.title ? '编辑书籍' : '新增书籍'}</span>
           <button type="button" className="ry-dialog-close" onClick={onClose}>×</button>
         </div>
         <div className="ry-dialog-body">
+          <div className="ry-cover-row">
+            <div className="ry-cover-preview">
+              {form.cover ? (
+                <img src={form.cover} alt="封面" />
+              ) : (
+                <span>暂无封面</span>
+              )}
+            </div>
+            <div className="ry-cover-actions">
+              <label className="ry-btn ry-btn-primary" style={{ cursor: 'pointer' }}>
+                上传封面
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => {
+                    void onCoverChange(e.target.files?.[0])
+                    e.target.value = ''
+                  }}
+                />
+              </label>
+              {form.cover && (
+                <button type="button" className="ry-btn" onClick={() => setField('cover', '')}>
+                  移除封面
+                </button>
+              )}
+              <div className="ry-hint">支持 JPG / PNG，自动压缩；建议竖版封面</div>
+              <label className="ry-btn ry-btn-success" style={{ cursor: 'pointer', marginTop: 10 }}>
+                导入书籍内容
+                <input
+                  type="file"
+                  accept=".json,.md,.markdown,.txt,application/json,text/plain,text/markdown"
+                  hidden
+                  onChange={(e) => {
+                    void onImportContent(e.target.files?.[0])
+                    e.target.value = ''
+                  }}
+                />
+              </label>
+              <div className="ry-hint">
+                自动识别 JSON / Markdown / TXT（支持「第X章」标题）
+                {importHint ? ` · ${importHint}` : ''}
+              </div>
+            </div>
+          </div>
+
           <div className="ry-form-row">
             <div className="ry-form-item">
               <label>书名 *</label>
               <input className="ry-input" value={form.title} onChange={(e) => setField('title', e.target.value)} />
             </div>
             <div className="ry-form-item">
-              <label>丛书 / 系列</label>
-              <input className="ry-input" value={form.series} onChange={(e) => setField('series', e.target.value)} />
+              <label>作者</label>
+              <input className="ry-input" value={form.author || ''} onChange={(e) => setField('author', e.target.value)} />
             </div>
           </div>
           <div className="ry-form-row">
+            <div className="ry-form-item">
+              <label>丛书 / 系列</label>
+              <input className="ry-input" value={form.series} onChange={(e) => setField('series', e.target.value)} />
+            </div>
             <div className="ry-form-item">
               <label>分类</label>
               <select className="ry-select" value={form.category} onChange={(e) => setField('category', e.target.value)}>
@@ -144,6 +228,8 @@ function BookDialog({
                 ))}
               </select>
             </div>
+          </div>
+          <div className="ry-form-row">
             <div className="ry-form-item">
               <label>权限标签</label>
               <select
@@ -156,14 +242,14 @@ function BookDialog({
                 ))}
               </select>
             </div>
-          </div>
-          <div className="ry-form-item">
-            <label>简介</label>
-            <textarea className="ry-textarea" value={form.description} onChange={(e) => setField('description', e.target.value)} />
+            <div className="ry-form-item">
+              <label>简介</label>
+              <input className="ry-input" value={form.description} onChange={(e) => setField('description', e.target.value)} />
+            </div>
           </div>
 
           <div className="ry-form-item">
-            <label>章节目录</label>
+            <label>章节目录与正文</label>
             {form.chapters.map((ch, ci) => (
               <div key={ch.id} className="ry-chapter-box">
                 <div className="ry-chapter-row">
@@ -177,7 +263,7 @@ function BookDialog({
                     type="button"
                     className="ry-btn"
                     onClick={() => {
-                      const children = [...(ch.children || []), { id: createId('sub'), title: '' }]
+                      const children = [...(ch.children || []), { id: createId('sub'), title: '', content: '' }]
                       updateChapter(ci, { children })
                     }}
                   >
@@ -196,25 +282,41 @@ function BookDialog({
                     删除
                   </button>
                 </div>
+                {!(ch.children && ch.children.length) && (
+                  <textarea
+                    className="ry-textarea"
+                    placeholder="章节正文（可选）"
+                    value={ch.content || ''}
+                    onChange={(e) => updateChapter(ci, { content: e.target.value })}
+                  />
+                )}
                 <div className="ry-child-list">
                   {(ch.children || []).map((child, childIdx) => (
-                    <div key={child.id} className="ry-chapter-row">
-                      <input
-                        className="ry-input"
-                        placeholder="小节标题"
-                        value={child.title}
-                        onChange={(e) => updateChild(ci, childIdx, e.target.value)}
+                    <div key={child.id} style={{ marginBottom: 8 }}>
+                      <div className="ry-chapter-row">
+                        <input
+                          className="ry-input"
+                          placeholder="小节标题"
+                          value={child.title}
+                          onChange={(e) => updateChild(ci, childIdx, { title: e.target.value })}
+                        />
+                        <button
+                          type="button"
+                          className="ry-btn"
+                          onClick={() => {
+                            const children = (ch.children || []).filter((_, i) => i !== childIdx)
+                            updateChapter(ci, { children })
+                          }}
+                        >
+                          删
+                        </button>
+                      </div>
+                      <textarea
+                        className="ry-textarea"
+                        placeholder="小节正文"
+                        value={child.content || ''}
+                        onChange={(e) => updateChild(ci, childIdx, { content: e.target.value })}
                       />
-                      <button
-                        type="button"
-                        className="ry-btn"
-                        onClick={() => {
-                          const children = (ch.children || []).filter((_, i) => i !== childIdx)
-                          updateChapter(ci, { children })
-                        }}
-                      >
-                        删
-                      </button>
                     </div>
                   ))}
                 </div>
@@ -247,19 +349,21 @@ function BookDialog({
               onSave({
                 ...form,
                 title: form.title.trim(),
+                author: (form.author || '').trim(),
                 chapters: form.chapters
                   .filter((c) => c.title.trim())
                   .map((c) => ({
                     ...c,
                     title: c.title.trim(),
+                    content: c.content?.trim() || '',
                     children: (c.children || [])
                       .filter((x) => x.title.trim())
-                      .map((x) => ({ ...x, title: x.title.trim() })),
+                      .map((x) => ({ ...x, title: x.title.trim(), content: x.content?.trim() || '' })),
                   })),
               })
             }}
           >
-            确 定
+            保存并同步到 App
           </button>
         </div>
       </div>
@@ -295,9 +399,9 @@ function Dashboard({ data }: { data: AppData }) {
       <div className="ry-card">
         <div style={{ fontWeight: 600, marginBottom: 12 }}>使用说明</div>
         <p style={{ fontSize: 13, color: '#606266', lineHeight: 1.8 }}>
-          本后台为电脑端管理界面，数据保存在浏览器本地（localStorage），无需单独部署服务器。
-          前台 App 与后台共用同一份数据：后台修改后刷新前台即可生效。
-          建议定期在「数据管理」中导出 JSON 备份。
+          本后台为电脑端管理界面。保存书籍后，同浏览器打开的 App 会自动同步，无需手动刷新。
+          支持上传封面，并导入 JSON / Markdown / TXT 书籍内容。
+          数据保存在本机浏览器，跨设备请使用「数据管理」导出/导入 JSON。
         </p>
       </div>
     </>
@@ -354,8 +458,9 @@ function BooksPage({ data }: { data: AppData }) {
           <thead>
             <tr>
               <th style={{ width: 60 }}>序号</th>
+              <th style={{ width: 70 }}>封面</th>
               <th>书名</th>
-              <th>丛书</th>
+              <th>作者</th>
               <th style={{ width: 90 }}>分类</th>
               <th style={{ width: 90 }}>权限</th>
               <th style={{ width: 80 }}>章节数</th>
@@ -365,14 +470,22 @@ function BooksPage({ data }: { data: AppData }) {
           <tbody>
             {list.length === 0 ? (
               <tr>
-                <td colSpan={7} className="ry-empty">暂无数据</td>
+                <td colSpan={8} className="ry-empty">暂无数据</td>
               </tr>
             ) : (
               list.map((book, i) => (
                 <tr key={book.id}>
                   <td>{i + 1}</td>
-                  <td>{book.title}</td>
-                  <td>{book.series || '-'}</td>
+                  <td>
+                    <div className="ry-table-cover">
+                      {book.cover ? <img src={book.cover} alt="" /> : <span>无</span>}
+                    </div>
+                  </td>
+                  <td>
+                    <div>{book.title}</div>
+                    <div className="ry-sub">{book.series || '-'}</div>
+                  </td>
+                  <td>{book.author || '-'}</td>
                   <td>{book.category}</td>
                   <td><AccessTag access={book.access} /></td>
                   <td>{book.chapters.length}</td>

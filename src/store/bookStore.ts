@@ -1,22 +1,54 @@
 import { DEFAULT_BOOKS, DEFAULT_CATEGORIES } from '../data/books'
 import type { AccessLevel, AppData, Book, Chapter } from '../types'
+import { createId as makeId } from '../utils/id'
 
 const STORAGE_KEY = 'book-catalog-data-v1'
 const AUTH_KEY = 'book-catalog-admin-auth'
 const ADMIN_PASSWORD = 'admin123'
+const CHANNEL_NAME = 'book-catalog-sync'
 
 type Listener = () => void
 
 const listeners = new Set<Listener>()
+let channel: BroadcastChannel | null = null
 
-function notify() {
+function getChannel() {
+  if (typeof BroadcastChannel === 'undefined') return null
+  if (!channel) {
+    channel = new BroadcastChannel(CHANNEL_NAME)
+    channel.onmessage = (ev) => {
+      if (ev.data?.type === 'data-updated') notifyLocal()
+    }
+  }
+  return channel
+}
+
+function notifyLocal() {
   listeners.forEach((fn) => fn())
 }
 
+function notifyAll() {
+  notifyLocal()
+  try {
+    getChannel()?.postMessage({ type: 'data-updated', at: Date.now() })
+  } catch {
+    /* ignore */
+  }
+}
+
+/** 同页 + 跨标签页实时同步（无需手动刷新） */
 export function subscribe(listener: Listener) {
   listeners.add(listener)
+  getChannel()
+
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === STORAGE_KEY) notifyLocal()
+  }
+  window.addEventListener('storage', onStorage)
+
   return () => {
     listeners.delete(listener)
+    window.removeEventListener('storage', onStorage)
   }
 }
 
@@ -24,6 +56,7 @@ function defaultData(): AppData {
   return {
     categories: [...DEFAULT_CATEGORIES],
     books: structuredClone(DEFAULT_BOOKS),
+    version: 1,
   }
 }
 
@@ -42,8 +75,9 @@ export function loadData(): AppData {
 }
 
 export function saveData(data: AppData) {
+  data.version = (data.version || 0) + 1
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-  notify()
+  notifyAll()
 }
 
 export function resetData() {
@@ -66,14 +100,15 @@ export function importDataJson(json: string) {
 }
 
 export function createId(prefix = 'id') {
-  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
+  return makeId(prefix)
 }
 
 export function upsertBook(book: Book) {
   const data = loadData()
+  const next = { ...book, updatedAt: Date.now() }
   const idx = data.books.findIndex((b) => b.id === book.id)
-  if (idx >= 0) data.books[idx] = book
-  else data.books.unshift(book)
+  if (idx >= 0) data.books[idx] = next
+  else data.books.unshift(next)
   saveData(data)
 }
 
@@ -120,14 +155,17 @@ export function emptyBook(category?: string): Book {
     title: '',
     series: '',
     description: '',
+    author: '',
     category: category || data.categories[0] || '未分类',
     access: '免费',
+    cover: '',
     chapters: [],
+    updatedAt: Date.now(),
   }
 }
 
 export function emptyChapter(): Chapter {
-  return { id: createId('ch'), title: '', children: [] }
+  return { id: createId('ch'), title: '', content: '', children: [] }
 }
 
 export const ACCESS_OPTIONS: AccessLevel[] = ['免费', '推荐', '需权限']
@@ -150,4 +188,8 @@ export function adminLogout() {
 
 export function getAdminPasswordHint() {
   return ADMIN_PASSWORD
+}
+
+export function getBookById(id: string) {
+  return loadData().books.find((b) => b.id === id) || null
 }
