@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { AccessLevel, AppData, Book } from './types'
 import { loadData, subscribe, syncFromRemote } from './store/bookStore'
-import { countWords, flattenChapters } from './utils/contentParser'
+import { countWords, flattenChapters, isVideoBook } from './utils/contentParser'
+import VideoBookPage from './VideoBookPage'
 import './App.css'
 
 type TabKey = 'home' | 'category'
@@ -9,6 +10,7 @@ type View =
   | { name: 'tabs' }
   | { name: 'detail'; bookId: string }
   | { name: 'reader'; bookId: string; chapterId?: string }
+  | { name: 'video'; bookId: string; chapterId?: string }
 
 function useAppData() {
   const [data, setData] = useState<AppData>(() => loadData())
@@ -452,7 +454,14 @@ export default function FrontApp() {
     }
   }, [view, currentBook])
 
-  const openBook = (book: Book) => setView({ name: 'detail', bookId: book.id })
+  const openBook = (book: Book) => {
+    if (isVideoBook(book)) {
+      const first = flattenChapters(book.chapters)[0]
+      setView({ name: 'video', bookId: book.id, chapterId: first?.id })
+      return
+    }
+    setView({ name: 'detail', bookId: book.id })
+  }
 
   return (
     <div className="app-shell">
@@ -470,6 +479,15 @@ export default function FrontApp() {
           chapterId={view.chapterId}
           onBack={() => setView({ name: 'detail', bookId: currentBook.id })}
           onChangeChapter={(id) => setView({ name: 'reader', bookId: currentBook.id, chapterId: id })}
+        />
+      )}
+
+      {view.name === 'video' && currentBook && (
+        <VideoBookPage
+          book={currentBook}
+          chapterId={view.chapterId}
+          onBack={() => setView({ name: 'tabs' })}
+          onChangeChapter={(id) => setView({ name: 'video', bookId: currentBook.id, chapterId: id })}
         />
       )}
 

@@ -175,6 +175,7 @@ export function emptyBook(category?: string): Book {
     series: '',
     description: '',
     author: '',
+    type: 'text',
     category: category || data.categories[0] || '未分类',
     access: '免费',
     cover: '',
@@ -184,7 +185,7 @@ export function emptyBook(category?: string): Book {
 }
 
 export function emptyChapter(): Chapter {
-  return { id: createId('ch'), title: '', content: '', children: [] }
+  return { id: createId('ch'), title: '', content: '', videoUrl: '', duration: 0, children: [] }
 }
 
 export const ACCESS_OPTIONS: AccessLevel[] = ['免费', '推荐', '需权限']

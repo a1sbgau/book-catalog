@@ -1,4 +1,4 @@
-import type { Book, Chapter } from '../types'
+import type { Book, Chapter, FlatChapter } from '../types'
 import { createId } from './id'
 
 export type ImportFormat = 'json' | 'markdown' | 'txt' | 'auto'
@@ -73,10 +73,21 @@ function normalizeChapters(list: unknown[]): Chapter[] {
             : typeof c.text === 'string'
               ? c.text
               : undefined
+      const videoUrl =
+        typeof c.videoUrl === 'string'
+          ? c.videoUrl
+          : typeof c.video === 'string'
+            ? c.video
+            : typeof c.url === 'string'
+              ? c.url
+              : undefined
+      const duration = typeof c.duration === 'number' ? c.duration : undefined
       return {
         id: typeof c.id === 'string' ? c.id : createId('ch'),
         title,
         content,
+        videoUrl,
+        duration,
         children: children?.length ? children : undefined,
       } satisfies Chapter
     })
@@ -209,9 +220,9 @@ export function parseBookContent(
   return { ...parsed, detectedFormat: 'TXT' }
 }
 
-/** 展平章节为阅读列表 */
-export function flattenChapters(chapters: Chapter[]): { id: string; title: string; content: string; path: string }[] {
-  const list: { id: string; title: string; content: string; path: string }[] = []
+/** 展平章节为阅读 / 播放列表 */
+export function flattenChapters(chapters: Chapter[]): FlatChapter[] {
+  const list: FlatChapter[] = []
   for (const ch of chapters) {
     if (ch.children?.length) {
       for (const child of ch.children) {
@@ -220,6 +231,8 @@ export function flattenChapters(chapters: Chapter[]): { id: string; title: strin
           title: child.title,
           content: child.content || ch.content || '',
           path: `${ch.title} / ${child.title}`,
+          videoUrl: child.videoUrl || ch.videoUrl,
+          duration: child.duration ?? ch.duration,
         })
       }
     } else {
@@ -228,10 +241,30 @@ export function flattenChapters(chapters: Chapter[]): { id: string; title: strin
         title: ch.title,
         content: ch.content || '',
         path: ch.title,
+        videoUrl: ch.videoUrl,
+        duration: ch.duration,
       })
     }
   }
   return list
+}
+
+export function formatDuration(seconds?: number) {
+  const s = Math.max(0, Math.floor(seconds || 0))
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  const mm = String(m).padStart(2, '0')
+  const ss = String(sec).padStart(2, '0')
+  if (h > 0) return `${String(h).padStart(2, '0')}:${mm}:${ss}`
+  return `00:${mm}:${ss}`
+}
+
+export function isVideoBook(book: Book) {
+  if (book.type === 'video') return true
+  if (book.type === 'text') return false
+  const flat = flattenChapters(book.chapters)
+  return flat.length > 0 && flat.every((c) => !!c.videoUrl)
 }
 
 export function countWords(book: Book) {

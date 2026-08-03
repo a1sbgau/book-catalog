@@ -846,8 +846,38 @@
           ]
         }
       ]
+    },
+    {
+      "id": "video-demo-course",
+      "title": "示例视频课（可替换）",
+      "series": "《视频书演示》",
+      "description": "演示视频书籍播放页。后台新建「视频书」并填写 mp4 地址后，即可变成正式课程。",
+      "category": "英语",
+      "access": "推荐",
+      "type": "video",
+      "author": "学科书库",
+      "chapters": [
+        {
+          "id": "vd-1",
+          "title": "第一课时：课程导学",
+          "videoUrl": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+          "duration": 5
+        },
+        {
+          "id": "vd-2",
+          "title": "第二课时：要点讲解",
+          "videoUrl": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm",
+          "duration": 5
+        },
+        {
+          "id": "vd-3",
+          "title": "第三课时：练习巩固",
+          "videoUrl": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+          "duration": 5
+        }
+      ]
     }
   ],
   "version": 1,
-  "updatedAt": 1785734711674
+  "updatedAt": 1785735478972
 }

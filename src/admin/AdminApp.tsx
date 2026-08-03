@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { AccessLevel, AppData, Book, Chapter } from '../types'
+import type { AccessLevel, AppData, Book, BookType, Chapter } from '../types'
 import {
   DATA_BRANCH,
   DATA_FILE,
@@ -244,6 +244,17 @@ function BookDialog({
           </div>
           <div className="ry-form-row">
             <div className="ry-form-item">
+              <label>书籍类型</label>
+              <select
+                className="ry-select"
+                value={form.type || 'text'}
+                onChange={(e) => setField('type', e.target.value as BookType)}
+              >
+                <option value="text">图文书</option>
+                <option value="video">视频书</option>
+              </select>
+            </div>
+            <div className="ry-form-item">
               <label>权限标签</label>
               <select
                 className="ry-select"
@@ -255,33 +266,40 @@ function BookDialog({
                 ))}
               </select>
             </div>
-            <div className="ry-form-item">
-              <label>简介</label>
-              <input className="ry-input" value={form.description} onChange={(e) => setField('description', e.target.value)} />
-            </div>
+          </div>
+          <div className="ry-form-item">
+            <label>简介</label>
+            <input className="ry-input" value={form.description} onChange={(e) => setField('description', e.target.value)} />
           </div>
 
           <div className="ry-form-item">
-            <label>章节目录与正文</label>
+            <label>{(form.type || 'text') === 'video' ? '视频目录' : '章节目录与正文'}</label>
+            {(form.type || 'text') === 'video' && (
+              <div className="ry-hint" style={{ marginBottom: 8 }}>
+                填写可直接播放的视频地址（mp4 / webm）。大文件请先传到网盘/对象存储后粘贴链接。
+              </div>
+            )}
             {form.chapters.map((ch, ci) => (
               <div key={ch.id} className="ry-chapter-box">
                 <div className="ry-chapter-row">
                   <input
                     className="ry-input"
-                    placeholder="单元 / 章节标题"
+                    placeholder={(form.type || 'text') === 'video' ? '课时标题' : '单元 / 章节标题'}
                     value={ch.title}
                     onChange={(e) => updateChapter(ci, { title: e.target.value })}
                   />
-                  <button
-                    type="button"
-                    className="ry-btn"
-                    onClick={() => {
-                      const children = [...(ch.children || []), { id: createId('sub'), title: '', content: '' }]
-                      updateChapter(ci, { children })
-                    }}
-                  >
-                    加小节
-                  </button>
+                  {(form.type || 'text') !== 'video' && (
+                    <button
+                      type="button"
+                      className="ry-btn"
+                      onClick={() => {
+                        const children = [...(ch.children || []), { id: createId('sub'), title: '', content: '' }]
+                        updateChapter(ci, { children })
+                      }}
+                    >
+                      加小节
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="ry-btn"
@@ -295,44 +313,88 @@ function BookDialog({
                     删除
                   </button>
                 </div>
-                {!(ch.children && ch.children.length) && (
-                  <textarea
-                    className="ry-textarea"
-                    placeholder="章节正文（可选）"
-                    value={ch.content || ''}
-                    onChange={(e) => updateChapter(ci, { content: e.target.value })}
-                  />
-                )}
-                <div className="ry-child-list">
-                  {(ch.children || []).map((child, childIdx) => (
-                    <div key={child.id} style={{ marginBottom: 8 }}>
-                      <div className="ry-chapter-row">
-                        <input
-                          className="ry-input"
-                          placeholder="小节标题"
-                          value={child.title}
-                          onChange={(e) => updateChild(ci, childIdx, { title: e.target.value })}
-                        />
-                        <button
-                          type="button"
-                          className="ry-btn"
-                          onClick={() => {
-                            const children = (ch.children || []).filter((_, i) => i !== childIdx)
-                            updateChapter(ci, { children })
-                          }}
-                        >
-                          删
-                        </button>
-                      </div>
-                      <textarea
-                        className="ry-textarea"
-                        placeholder="小节正文"
-                        value={child.content || ''}
-                        onChange={(e) => updateChild(ci, childIdx, { content: e.target.value })}
+                {(form.type || 'text') === 'video' ? (
+                  <>
+                    <input
+                      className="ry-input"
+                      style={{ width: '100%', marginBottom: 8 }}
+                      placeholder="视频地址 https://.../xxx.mp4"
+                      value={ch.videoUrl || ''}
+                      onChange={(e) => updateChapter(ci, { videoUrl: e.target.value })}
+                    />
+                    <div className="ry-chapter-row">
+                      <input
+                        className="ry-input"
+                        type="number"
+                        min={0}
+                        placeholder="时长（秒，可自动读取）"
+                        value={ch.duration || ''}
+                        onChange={(e) => updateChapter(ci, { duration: Number(e.target.value) || 0 })}
                       />
+                      <button
+                        type="button"
+                        className="ry-btn"
+                        onClick={() => {
+                          const url = ch.videoUrl?.trim()
+                          if (!url) {
+                            alert('请先填写视频地址')
+                            return
+                          }
+                          const video = document.createElement('video')
+                          video.preload = 'metadata'
+                          video.src = url
+                          video.onloadedmetadata = () => {
+                            updateChapter(ci, { duration: Math.round(video.duration || 0) })
+                          }
+                          video.onerror = () => alert('无法读取视频时长，请检查地址是否可公开访问')
+                        }}
+                      >
+                        读取时长
+                      </button>
                     </div>
-                  ))}
-                </div>
+                  </>
+                ) : (
+                  !(ch.children && ch.children.length) && (
+                    <textarea
+                      className="ry-textarea"
+                      placeholder="章节正文（可选）"
+                      value={ch.content || ''}
+                      onChange={(e) => updateChapter(ci, { content: e.target.value })}
+                    />
+                  )
+                )}
+                {(form.type || 'text') !== 'video' && (
+                  <div className="ry-child-list">
+                    {(ch.children || []).map((child, childIdx) => (
+                      <div key={child.id} style={{ marginBottom: 8 }}>
+                        <div className="ry-chapter-row">
+                          <input
+                            className="ry-input"
+                            placeholder="小节标题"
+                            value={child.title}
+                            onChange={(e) => updateChild(ci, childIdx, { title: e.target.value })}
+                          />
+                          <button
+                            type="button"
+                            className="ry-btn"
+                            onClick={() => {
+                              const children = (ch.children || []).filter((_, i) => i !== childIdx)
+                              updateChapter(ci, { children })
+                            }}
+                          >
+                            删
+                          </button>
+                        </div>
+                        <textarea
+                          className="ry-textarea"
+                          placeholder="小节正文"
+                          value={child.content || ''}
+                          onChange={(e) => updateChild(ci, childIdx, { content: e.target.value })}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
             <button
@@ -345,7 +407,7 @@ function BookDialog({
                 }))
               }
             >
-              + 添加章节
+              + 添加{(form.type || 'text') === 'video' ? '课时' : '章节'}
             </button>
           </div>
         </div>
@@ -471,8 +533,9 @@ function BooksPage({ data }: { data: AppData }) {
             <tr>
               <th style={{ width: 60 }}>序号</th>
               <th style={{ width: 70 }}>封面</th>
-              <th>书名</th>
+                  <th>书名</th>
               <th>作者</th>
+              <th style={{ width: 70 }}>类型</th>
               <th style={{ width: 90 }}>分类</th>
               <th style={{ width: 90 }}>权限</th>
               <th style={{ width: 80 }}>章节数</th>
@@ -482,7 +545,7 @@ function BooksPage({ data }: { data: AppData }) {
           <tbody>
             {list.length === 0 ? (
               <tr>
-                <td colSpan={8} className="ry-empty">暂无数据</td>
+                <td colSpan={9} className="ry-empty">暂无数据</td>
               </tr>
             ) : (
               list.map((book, i) => (
@@ -498,6 +561,11 @@ function BooksPage({ data }: { data: AppData }) {
                     <div className="ry-sub">{book.series || '-'}</div>
                   </td>
                   <td>{book.author || '-'}</td>
+                  <td>
+                    <span className={`ry-tag ${(book.type || 'text') === 'video' ? 'ry-tag-warning' : 'ry-tag-info'}`}>
+                      {(book.type || 'text') === 'video' ? '视频' : '图文'}
+                    </span>
+                  </td>
                   <td>{book.category}</td>
                   <td><AccessTag access={book.access} /></td>
                   <td>{book.chapters.length}</td>
