@@ -1,0 +1,61 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #ffffff;
+  --page-bg: #f5f6f8;
+  --sidebar-bg: #f2f3f5;
+  --surface: #ffffff;
+  --text: #1a1a1a;
+  --text-secondary: #8a8f98;
+  --text-muted: #a0a5ad;
+  --primary: #3478f6;
+  --tab-inactive: #999999;
+  --badge-bg: #fff0e6;
+  --badge-text: #e8873a;
+  --badge-free-bg: #e8f5e9;
+  --badge-free-text: #43a047;
+  --badge-rec-bg: #e8f0fe;
+  --badge-rec-text: #3478f6;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --radius-card: 10px;
+  --radius-pill: 999px;
+  --tab-height: 56px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+    "Noto Sans SC", sans-serif;
+  background: #d8dce4;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.admin-mode {
+  background: #f0f2f5;
+  overflow: auto;
+}
+
+button {
+  font-family: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+ul {
+  list-style: none;
+}
