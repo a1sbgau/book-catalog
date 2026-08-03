@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { AccessLevel, AppData, Book, Chapter } from '../types'
 import {
+  DATA_BRANCH,
+  DATA_FILE,
+  GITHUB_OWNER,
+  GITHUB_REPO,
+  getPublicDataUrl,
+} from '../config'
+import {
   ACCESS_OPTIONS,
   addCategory,
   adminLogin,
@@ -18,13 +25,19 @@ import {
   renameCategory,
   resetData,
   subscribe,
+  syncFromRemote,
   upsertBook,
 } from '../store/bookStore'
+import {
+  getGithubToken,
+  publishRemoteData,
+  setGithubToken,
+} from '../store/remote'
 import { parseBookContent } from '../utils/contentParser'
 import { compressCover } from '../utils/image'
 import './Admin.css'
 
-type MenuKey = 'dashboard' | 'books' | 'categories' | 'data'
+type MenuKey = 'dashboard' | 'books' | 'categories' | 'publish' | 'data'
 
 function useAppData() {
   const [data, setData] = useState<AppData>(() => loadData())
@@ -363,7 +376,7 @@ function BookDialog({
               })
             }}
           >
-            保存并同步到 App
+            保存到本地
           </button>
         </div>
       </div>
@@ -399,9 +412,8 @@ function Dashboard({ data }: { data: AppData }) {
       <div className="ry-card">
         <div style={{ fontWeight: 600, marginBottom: 12 }}>使用说明</div>
         <p style={{ fontSize: 13, color: '#606266', lineHeight: 1.8 }}>
-          本后台为电脑端管理界面。保存书籍后，同浏览器打开的 App 会自动同步，无需手动刷新。
-          支持上传封面，并导入 JSON / Markdown / TXT 书籍内容。
-          数据保存在本机浏览器，跨设备请使用「数据管理」导出/导入 JSON。
+          编辑书籍后请到「线上发布」推送到 GitHub，所有人的手机打开站点即可看到同一份数据。
+          公开地址：{getPublicDataUrl()}
         </p>
       </div>
     </>
@@ -653,6 +665,100 @@ function CategoriesPage({ data }: { data: AppData }) {
   )
 }
 
+function PublishPage({ data }: { data: AppData }) {
+  const [token, setToken] = useState(() => getGithubToken())
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+  const publicUrl = getPublicDataUrl()
+
+  const pull = async () => {
+    setBusy(true)
+    setMsg('')
+    try {
+      await syncFromRemote()
+      setMsg('已从 GitHub 拉取最新线上数据到本地')
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : '拉取失败')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const publish = async () => {
+    if (!token.trim()) {
+      alert('请先填写 GitHub Token')
+      return
+    }
+    if (!confirm('确认发布当前书籍数据到 GitHub？所有人手机将看到这份内容。')) return
+    setBusy(true)
+    setMsg('')
+    try {
+      setGithubToken(token)
+      await publishRemoteData(loadData(), token)
+      setMsg('发布成功！手机打开站点即可看到最新内容（约几秒到一分钟生效）')
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : '发布失败')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <>
+      <div className="ry-card" style={{ marginBottom: 16 }}>
+        <div style={{ fontWeight: 600, marginBottom: 10 }}>线上共用地址</div>
+        <p style={{ fontSize: 13, color: '#606266', lineHeight: 1.8, marginBottom: 8 }}>
+          仓库：{GITHUB_OWNER}/{GITHUB_REPO} · 分支：{DATA_BRANCH} · 文件：{DATA_FILE}
+        </p>
+        <a className="ry-link" href={publicUrl} target="_blank" rel="noreferrer">{publicUrl}</a>
+        <div className="ry-hint" style={{ marginTop: 10 }}>
+          App 会从这个地址拉取数据。你在后台改完书后，必须点「发布到 GitHub」，别人的手机才能看到。
+        </div>
+      </div>
+
+      <div className="ry-card" style={{ marginBottom: 16 }}>
+        <div style={{ fontWeight: 600, marginBottom: 12 }}>GitHub Token（仅发布时需要）</div>
+        <div className="ry-form-item">
+          <label>Personal Access Token</label>
+          <input
+            className="ry-input"
+            type="password"
+            placeholder="ghp_xxxxxxxx 或 github_pat_xxxxxxxx"
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+          />
+          <div className="ry-hint">
+            在 GitHub → Settings → Developer settings → Personal access tokens 创建，勾选 repo 权限。
+            Token 只存在当前浏览器会话，不会上传到代码仓库。
+          </div>
+        </div>
+        <div className="ry-toolbar" style={{ marginBottom: 0 }}>
+          <button type="button" className="ry-btn" disabled={busy} onClick={() => void pull()}>
+            从线上拉取
+          </button>
+          <button type="button" className="ry-btn ry-btn-primary" disabled={busy} onClick={() => void publish()}>
+            {busy ? '处理中…' : '发布到 GitHub'}
+          </button>
+          <span style={{ fontSize: 13, color: '#909399' }}>
+            当前本地 {data.books.length} 本书 · 版本 v{data.version || 1}
+          </span>
+        </div>
+        {msg && <div className="ry-hint" style={{ marginTop: 12, color: '#409eff' }}>{msg}</div>}
+      </div>
+
+      <div className="ry-card">
+        <div style={{ fontWeight: 600, marginBottom: 8 }}>使用步骤</div>
+        <ol style={{ fontSize: 13, color: '#606266', lineHeight: 2, paddingLeft: 18 }}>
+          <li>在「书籍管理」里编辑 / 上传封面 / 导入内容</li>
+          <li>创建带 repo 权限的 GitHub Token 并粘贴到上方</li>
+          <li>点击「发布到 GitHub」</li>
+          <li>用任意手机打开前台地址，即可看到同一份书库</li>
+        </ol>
+      </div>
+    </>
+  )
+}
+
 function DataPage() {
   const [text, setText] = useState(() => exportDataJson())
 
@@ -731,7 +837,7 @@ function DataPage() {
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
-      <div className="ry-hint">数据保存在本机浏览器，换电脑或清缓存需重新导入备份。</div>
+      <div className="ry-hint">本地备份用。要让别人手机看到，请到「线上发布」推送到 GitHub。</div>
     </div>
   )
 }
@@ -740,6 +846,7 @@ const MENUS: { key: MenuKey; label: string }[] = [
   { key: 'dashboard', label: '首页' },
   { key: 'books', label: '书籍管理' },
   { key: 'categories', label: '分类管理' },
+  { key: 'publish', label: '线上发布' },
   { key: 'data', label: '数据管理' },
 ]
 
@@ -747,6 +854,7 @@ const TITLES: Record<MenuKey, string> = {
   dashboard: '首页',
   books: '书籍管理',
   categories: '分类管理',
+  publish: '线上发布',
   data: '数据管理',
 }
 
@@ -806,6 +914,7 @@ export default function AdminApp() {
             {menu === 'dashboard' && <Dashboard data={data} />}
             {menu === 'books' && <BooksPage data={data} />}
             {menu === 'categories' && <CategoriesPage data={data} />}
+            {menu === 'publish' && <PublishPage data={data} />}
             {menu === 'data' && <DataPage />}
           </main>
         </div>

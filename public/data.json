@@ -1,0 +1,853 @@
+{
+  "categories": [
+    "语文",
+    "数学",
+    "英语",
+    "物理",
+    "化学",
+    "生物",
+    "历史",
+    "地理"
+  ],
+  "books": [
+    {
+      "id": "yuwen-gushi",
+      "title": "古诗词鉴赏",
+      "series": "《高中语文必修一》",
+      "description": "经典篇目精读与赏析",
+      "category": "语文",
+      "access": "推荐",
+      "chapters": [
+        {
+          "id": "yw-1",
+          "title": "第一单元 诗意人生",
+          "children": [
+            {
+              "id": "yw-1-1",
+              "title": "沁园春·长沙",
+              "content": "独立寒秋，湘江北去，橘子洲头。\n看万山红遍，层林尽染；漫江碧透，百舸争流。\n鹰击长空，鱼翔浅底，万类霜天竞自由。\n怅寥廓，问苍茫大地，谁主沉浮？\n\n携来百侣曾游，忆往昔峥嵘岁月稠。\n恰同学少年，风华正茂；书生意气，挥斥方遒。\n指点江山，激扬文字，粪土当年万户侯。\n曾记否，到中流击水，浪遏飞舟？"
+            },
+            {
+              "id": "yw-1-2",
+              "title": "立在地球边上放号",
+              "content": "无限的太平洋提起他全身的力量来要把地球推倒。\n啊啊！我眼前来了的滚滚的洪涛哟！\n啊啊！不断的毁坏，不断的创造，不断的努力哟！\n啊啊！力哟！力哟！\n力的绘画，力的舞蹈，力的音乐，力的诗歌，力的律吕哟！"
+            },
+            {
+              "id": "yw-1-3",
+              "title": "红烛",
+              "content": "红烛啊！\n这样红的烛！\n诗人啊！\n吐出你的心来比比，可是这样红么？"
+            }
+          ]
+        },
+        {
+          "id": "yw-2",
+          "title": "第二单元 劳动光荣",
+          "children": [
+            {
+              "id": "yw-2-1",
+              "title": "芣苢"
+            },
+            {
+              "id": "yw-2-2",
+              "title": "插秧歌"
+            },
+            {
+              "id": "yw-2-3",
+              "title": "喜看稻菽千重浪"
+            }
+          ]
+        },
+        {
+          "id": "yw-3",
+          "title": "第三单元 学习之道",
+          "children": [
+            {
+              "id": "yw-3-1",
+              "title": "劝学"
+            },
+            {
+              "id": "yw-3-2",
+              "title": "师说"
+            },
+            {
+              "id": "yw-3-3",
+              "title": "反对党八股（节选）"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "yuwen-sanwen",
+      "title": "现代散文精选",
+      "series": "《高中语文必修二》",
+      "description": "散文阅读与写作指导",
+      "category": "语文",
+      "access": "免费",
+      "chapters": [
+        {
+          "id": "yw-s-1",
+          "title": "第一单元 中华文明之光",
+          "children": [
+            {
+              "id": "yw-s-1-1",
+              "title": "子路、曾皙、冉有、公西华侍坐"
+            },
+            {
+              "id": "yw-s-1-2",
+              "title": "齐桓晋文之事"
+            },
+            {
+              "id": "yw-s-1-3",
+              "title": "庖丁解牛"
+            }
+          ]
+        },
+        {
+          "id": "yw-s-2",
+          "title": "第二单元 至情至性",
+          "children": [
+            {
+              "id": "yw-s-2-1",
+              "title": "故都的秋"
+            },
+            {
+              "id": "yw-s-2-2",
+              "title": "荷塘月色"
+            },
+            {
+              "id": "yw-s-2-3",
+              "title": "我与地坛（节选）"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "yuwen-xiezuo",
+      "title": "作文写作技法",
+      "series": "《语文专项提升》",
+      "description": "议论文与记叙文写作训练",
+      "category": "语文",
+      "access": "需权限",
+      "chapters": [
+        {
+          "id": "yw-x-1",
+          "title": "议论文专项",
+          "children": [
+            {
+              "id": "yw-x-1-1",
+              "title": "审题立意"
+            },
+            {
+              "id": "yw-x-1-2",
+              "title": "论据运用"
+            },
+            {
+              "id": "yw-x-1-3",
+              "title": "结构布局"
+            }
+          ]
+        },
+        {
+          "id": "yw-x-2",
+          "title": "记叙文专项",
+          "children": [
+            {
+              "id": "yw-x-2-1",
+              "title": "细节描写"
+            },
+            {
+              "id": "yw-x-2-2",
+              "title": "情感表达"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "math-hanshu",
+      "title": "函数与导数",
+      "series": "《高中数学必修一》",
+      "description": "函数概念、性质与应用",
+      "category": "数学",
+      "access": "推荐",
+      "chapters": [
+        {
+          "id": "sx-1",
+          "title": "第一章 集合与常用逻辑用语",
+          "children": [
+            {
+              "id": "sx-1-1",
+              "title": "集合的概念"
+            },
+            {
+              "id": "sx-1-2",
+              "title": "集合间的基本关系"
+            },
+            {
+              "id": "sx-1-3",
+              "title": "集合的基本运算"
+            }
+          ]
+        },
+        {
+          "id": "sx-2",
+          "title": "第二章 一元二次函数、方程和不等式",
+          "children": [
+            {
+              "id": "sx-2-1",
+              "title": "等式性质与不等式性质"
+            },
+            {
+              "id": "sx-2-2",
+              "title": "基本不等式"
+            },
+            {
+              "id": "sx-2-3",
+              "title": "二次函数与一元二次方程、不等式"
+            }
+          ]
+        },
+        {
+          "id": "sx-3",
+          "title": "第三章 函数的概念与性质",
+          "children": [
+            {
+              "id": "sx-3-1",
+              "title": "函数的概念及其表示"
+            },
+            {
+              "id": "sx-3-2",
+              "title": "函数的基本性质"
+            },
+            {
+              "id": "sx-3-3",
+              "title": "幂函数"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "math-sanjiao",
+      "title": "三角函数",
+      "series": "《高中数学必修四》",
+      "description": "三角恒等变换与应用",
+      "category": "数学",
+      "access": "免费",
+      "chapters": [
+        {
+          "id": "sx-sj-1",
+          "title": "第一章 三角函数",
+          "children": [
+            {
+              "id": "sx-sj-1-1",
+              "title": "任意角和弧度制"
+            },
+            {
+              "id": "sx-sj-1-2",
+              "title": "三角函数的概念"
+            },
+            {
+              "id": "sx-sj-1-3",
+              "title": "诱导公式"
+            },
+            {
+              "id": "sx-sj-1-4",
+              "title": "三角函数的图象与性质"
+            }
+          ]
+        },
+        {
+          "id": "sx-sj-2",
+          "title": "第二章 平面向量及其应用",
+          "children": [
+            {
+              "id": "sx-sj-2-1",
+              "title": "平面向量的概念"
+            },
+            {
+              "id": "sx-sj-2-2",
+              "title": "平面向量的运算"
+            },
+            {
+              "id": "sx-sj-2-3",
+              "title": "余弦定理、正弦定理"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "math-gailv",
+      "title": "概率与统计",
+      "series": "《高中数学选择性必修》",
+      "description": "概率模型与数据分析",
+      "category": "数学",
+      "access": "需权限",
+      "chapters": [
+        {
+          "id": "sx-gl-1",
+          "title": "第一章 计数原理",
+          "children": [
+            {
+              "id": "sx-gl-1-1",
+              "title": "分类加法计数原理与分步乘法计数原理"
+            },
+            {
+              "id": "sx-gl-1-2",
+              "title": "排列与组合"
+            },
+            {
+              "id": "sx-gl-1-3",
+              "title": "二项式定理"
+            }
+          ]
+        },
+        {
+          "id": "sx-gl-2",
+          "title": "第二章 随机变量及其分布",
+          "children": [
+            {
+              "id": "sx-gl-2-1",
+              "title": "离散型随机变量及其分布列"
+            },
+            {
+              "id": "sx-gl-2-2",
+              "title": "二项分布与超几何分布"
+            },
+            {
+              "id": "sx-gl-2-3",
+              "title": "正态分布"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "en-vocab",
+      "title": "核心词汇突破",
+      "series": "《高中英语词汇手册》",
+      "description": "3500词分级记忆与运用",
+      "category": "英语",
+      "access": "推荐",
+      "chapters": [
+        {
+          "id": "en-1",
+          "title": "Unit 1 People and Relationships",
+          "children": [
+            {
+              "id": "en-1-1",
+              "title": "Family & Friends"
+            },
+            {
+              "id": "en-1-2",
+              "title": "Personality Adjectives"
+            },
+            {
+              "id": "en-1-3",
+              "title": "Social Expressions"
+            }
+          ]
+        },
+        {
+          "id": "en-2",
+          "title": "Unit 2 School Life",
+          "children": [
+            {
+              "id": "en-2-1",
+              "title": "Subjects & Activities"
+            },
+            {
+              "id": "en-2-2",
+              "title": "Campus Vocabulary"
+            },
+            {
+              "id": "en-2-3",
+              "title": "Study Habits"
+            }
+          ]
+        },
+        {
+          "id": "en-3",
+          "title": "Unit 3 Nature and Environment",
+          "children": [
+            {
+              "id": "en-3-1",
+              "title": "Weather & Climate"
+            },
+            {
+              "id": "en-3-2",
+              "title": "Wildlife"
+            },
+            {
+              "id": "en-3-3",
+              "title": "Environmental Protection"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "en-grammar",
+      "title": "语法精讲精练",
+      "series": "《高中英语语法大全》",
+      "description": "时态、从句与虚拟语气",
+      "category": "英语",
+      "access": "免费",
+      "chapters": [
+        {
+          "id": "en-g-1",
+          "title": "第一部分 词法",
+          "children": [
+            {
+              "id": "en-g-1-1",
+              "title": "名词与冠词"
+            },
+            {
+              "id": "en-g-1-2",
+              "title": "代词与数词"
+            },
+            {
+              "id": "en-g-1-3",
+              "title": "形容词与副词"
+            },
+            {
+              "id": "en-g-1-4",
+              "title": "介词与连词"
+            }
+          ]
+        },
+        {
+          "id": "en-g-2",
+          "title": "第二部分 句法",
+          "children": [
+            {
+              "id": "en-g-2-1",
+              "title": "定语从句"
+            },
+            {
+              "id": "en-g-2-2",
+              "title": "名词性从句"
+            },
+            {
+              "id": "en-g-2-3",
+              "title": "状语从句"
+            },
+            {
+              "id": "en-g-2-4",
+              "title": "虚拟语气"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "en-reading",
+      "title": "阅读理解专项",
+      "series": "《英语高考冲刺》",
+      "description": "题型解析与真题演练",
+      "category": "英语",
+      "access": "需权限",
+      "chapters": [
+        {
+          "id": "en-r-1",
+          "title": "题型突破",
+          "children": [
+            {
+              "id": "en-r-1-1",
+              "title": "细节理解题"
+            },
+            {
+              "id": "en-r-1-2",
+              "title": "推理判断题"
+            },
+            {
+              "id": "en-r-1-3",
+              "title": "主旨大意题"
+            },
+            {
+              "id": "en-r-1-4",
+              "title": "词义猜测题"
+            }
+          ]
+        },
+        {
+          "id": "en-r-2",
+          "title": "真题演练",
+          "children": [
+            {
+              "id": "en-r-2-1",
+              "title": "全国卷精选（一）"
+            },
+            {
+              "id": "en-r-2-2",
+              "title": "全国卷精选（二）"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phy-lixue",
+      "title": "力学基础",
+      "series": "《高中物理必修一》",
+      "description": "运动描述与牛顿定律",
+      "category": "物理",
+      "access": "推荐",
+      "chapters": [
+        {
+          "id": "wl-1",
+          "title": "第一章 运动的描述",
+          "children": [
+            {
+              "id": "wl-1-1",
+              "title": "质点 参考系"
+            },
+            {
+              "id": "wl-1-2",
+              "title": "时间 位移"
+            },
+            {
+              "id": "wl-1-3",
+              "title": "速度"
+            },
+            {
+              "id": "wl-1-4",
+              "title": "加速度"
+            }
+          ]
+        },
+        {
+          "id": "wl-2",
+          "title": "第二章 匀变速直线运动的研究",
+          "children": [
+            {
+              "id": "wl-2-1",
+              "title": "实验：探究小车速度随时间变化的规律"
+            },
+            {
+              "id": "wl-2-2",
+              "title": "匀变速直线运动的速度与时间的关系"
+            },
+            {
+              "id": "wl-2-3",
+              "title": "自由落体运动"
+            }
+          ]
+        },
+        {
+          "id": "wl-3",
+          "title": "第三章 牛顿运动定律",
+          "children": [
+            {
+              "id": "wl-3-1",
+              "title": "牛顿第一定律"
+            },
+            {
+              "id": "wl-3-2",
+              "title": "牛顿第二定律"
+            },
+            {
+              "id": "wl-3-3",
+              "title": "牛顿第三定律"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phy-dianci",
+      "title": "电磁学导论",
+      "series": "《高中物理选择性必修》",
+      "description": "电场、磁场与电磁感应",
+      "category": "物理",
+      "access": "需权限",
+      "chapters": [
+        {
+          "id": "wl-dc-1",
+          "title": "第一章 静电场",
+          "children": [
+            {
+              "id": "wl-dc-1-1",
+              "title": "电荷 库仑定律"
+            },
+            {
+              "id": "wl-dc-1-2",
+              "title": "电场强度"
+            },
+            {
+              "id": "wl-dc-1-3",
+              "title": "电势差 电势"
+            }
+          ]
+        },
+        {
+          "id": "wl-dc-2",
+          "title": "第二章 恒定电流",
+          "children": [
+            {
+              "id": "wl-dc-2-1",
+              "title": "电源和电流"
+            },
+            {
+              "id": "wl-dc-2-2",
+              "title": "欧姆定律"
+            },
+            {
+              "id": "wl-dc-2-3",
+              "title": "串联电路和并联电路"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chem-jichu",
+      "title": "化学基础",
+      "series": "《高中化学必修一》",
+      "description": "物质结构与元素周期律",
+      "category": "化学",
+      "access": "免费",
+      "chapters": [
+        {
+          "id": "hx-1",
+          "title": "第一章 物质及其变化",
+          "children": [
+            {
+              "id": "hx-1-1",
+              "title": "物质的分类及转化"
+            },
+            {
+              "id": "hx-1-2",
+              "title": "离子反应"
+            },
+            {
+              "id": "hx-1-3",
+              "title": "氧化还原反应"
+            }
+          ]
+        },
+        {
+          "id": "hx-2",
+          "title": "第二章 海水中的重要元素——钠和氯",
+          "children": [
+            {
+              "id": "hx-2-1",
+              "title": "钠及其化合物"
+            },
+            {
+              "id": "hx-2-2",
+              "title": "氯及其化合物"
+            },
+            {
+              "id": "hx-2-3",
+              "title": "物质的量"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chem-youji",
+      "title": "有机化学基础",
+      "series": "《高中化学选择性必修三》",
+      "description": "烃类与官能团化合物",
+      "category": "化学",
+      "access": "需权限",
+      "chapters": [
+        {
+          "id": "hx-yj-1",
+          "title": "第一章 认识有机化合物",
+          "children": [
+            {
+              "id": "hx-yj-1-1",
+              "title": "有机化合物的结构特点"
+            },
+            {
+              "id": "hx-yj-1-2",
+              "title": "有机化合物的分类与命名"
+            },
+            {
+              "id": "hx-yj-1-3",
+              "title": "研究有机化合物的一般方法"
+            }
+          ]
+        },
+        {
+          "id": "hx-yj-2",
+          "title": "第二章 烃和卤代烃",
+          "children": [
+            {
+              "id": "hx-yj-2-1",
+              "title": "烷烃"
+            },
+            {
+              "id": "hx-yj-2-2",
+              "title": "烯烃 炔烃"
+            },
+            {
+              "id": "hx-yj-2-3",
+              "title": "芳香烃"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bio-xibao",
+      "title": "细胞生物学",
+      "series": "《高中生物必修一》",
+      "description": "分子与细胞基础",
+      "category": "生物",
+      "access": "推荐",
+      "chapters": [
+        {
+          "id": "sw-1",
+          "title": "第一章 走近细胞",
+          "children": [
+            {
+              "id": "sw-1-1",
+              "title": "细胞是生命活动的基本单位"
+            },
+            {
+              "id": "sw-1-2",
+              "title": "细胞的多样性和统一性"
+            }
+          ]
+        },
+        {
+          "id": "sw-2",
+          "title": "第二章 组成细胞的分子",
+          "children": [
+            {
+              "id": "sw-2-1",
+              "title": "细胞中的元素和化合物"
+            },
+            {
+              "id": "sw-2-2",
+              "title": "细胞中的无机物"
+            },
+            {
+              "id": "sw-2-3",
+              "title": "细胞中的糖类和脂质"
+            },
+            {
+              "id": "sw-2-4",
+              "title": "蛋白质是生命活动的主要承担者"
+            }
+          ]
+        },
+        {
+          "id": "sw-3",
+          "title": "第三章 细胞的基本结构",
+          "children": [
+            {
+              "id": "sw-3-1",
+              "title": "细胞膜——系统的边界"
+            },
+            {
+              "id": "sw-3-2",
+              "title": "细胞器——系统内的分工合作"
+            },
+            {
+              "id": "sw-3-3",
+              "title": "细胞核——系统的控制中心"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-zhongguo",
+      "title": "中国古代史",
+      "series": "《高中历史必修》",
+      "description": "从先秦到明清的历史脉络",
+      "category": "历史",
+      "access": "免费",
+      "chapters": [
+        {
+          "id": "ls-1",
+          "title": "第一单元 从中华文明起源到秦汉统一多民族封建国家的建立与巩固",
+          "children": [
+            {
+              "id": "ls-1-1",
+              "title": "中华文明的起源与早期国家"
+            },
+            {
+              "id": "ls-1-2",
+              "title": "诸侯纷争与变法运动"
+            },
+            {
+              "id": "ls-1-3",
+              "title": "秦统一多民族封建国家的建立"
+            }
+          ]
+        },
+        {
+          "id": "ls-2",
+          "title": "第二单元 三国两晋南北朝的民族交融与隋唐统一多民族封建国家的发展",
+          "children": [
+            {
+              "id": "ls-2-1",
+              "title": "三国两晋南北朝的政权更迭与民族交融"
+            },
+            {
+              "id": "ls-2-2",
+              "title": "从隋唐盛世到五代十国"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "geo-ziran",
+      "title": "自然地理",
+      "series": "《高中地理必修一》",
+      "description": "地球与地图、自然环境",
+      "category": "地理",
+      "access": "推荐",
+      "chapters": [
+        {
+          "id": "dl-1",
+          "title": "第一章 宇宙中的地球",
+          "children": [
+            {
+              "id": "dl-1-1",
+              "title": "地球的宇宙环境"
+            },
+            {
+              "id": "dl-1-2",
+              "title": "太阳对地球的影响"
+            },
+            {
+              "id": "dl-1-3",
+              "title": "地球的历史"
+            },
+            {
+              "id": "dl-1-4",
+              "title": "地球的圈层结构"
+            }
+          ]
+        },
+        {
+          "id": "dl-2",
+          "title": "第二章 地球上的大气",
+          "children": [
+            {
+              "id": "dl-2-1",
+              "title": "大气的组成和垂直分层"
+            },
+            {
+              "id": "dl-2-2",
+              "title": "大气受热过程和大气运动"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": 1,
+  "updatedAt": 1785734711674
+}

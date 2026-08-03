@@ -27,4 +27,5 @@ export interface AppData {
   categories: string[]
   books: Book[]
   version?: number
+  updatedAt?: number
 }

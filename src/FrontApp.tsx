@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { AccessLevel, AppData, Book } from './types'
-import { loadData, subscribe } from './store/bookStore'
+import { loadData, subscribe, syncFromRemote } from './store/bookStore'
 import { countWords, flattenChapters } from './utils/contentParser'
 import './App.css'
 
@@ -381,25 +381,54 @@ export default function FrontApp() {
   const [view, setView] = useState<View>({ name: 'tabs' })
   const [toast, setToast] = useState('')
   const toastTimer = useRef<number | null>(null)
-  const syncTipShown = useRef(false)
+  const lastRemoteVersion = useRef<number | null>(null)
+
+  const showToast = (msg: string) => {
+    setToast(msg)
+    if (toastTimer.current) window.clearTimeout(toastTimer.current)
+    toastTimer.current = window.setTimeout(() => setToast(''), 1600)
+  }
+
+  // 所有人（含手机）共用 GitHub 远程数据
+  useEffect(() => {
+    let cancelled = false
+
+    const pull = async (silent: boolean) => {
+      try {
+        const remote = await syncFromRemote()
+        if (cancelled) return
+        const ver = remote.version || 0
+        if (lastRemoteVersion.current !== null && ver !== lastRemoteVersion.current) {
+          showToast('已更新为最新书库')
+        }
+        lastRemoteVersion.current = ver
+        if (!silent && lastRemoteVersion.current === ver) {
+          /* first load ok */
+        }
+      } catch {
+        if (!silent) showToast('线上数据暂不可用，已显示本地缓存')
+      }
+    }
+
+    void pull(true)
+    const timer = window.setInterval(() => void pull(true), 30000)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void pull(true)
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [])
 
   useEffect(() => {
     if (category !== '全部' && !data.categories.includes(category)) {
       setCategory('全部')
     }
   }, [data.categories, category])
-
-  // 数据变更时给出轻提示（后台保存后前台自动更新）
-  useEffect(() => {
-    if (!syncTipShown.current) {
-      syncTipShown.current = true
-      return
-    }
-    if (view.name !== 'tabs') return
-    setToast('内容已同步更新')
-    if (toastTimer.current) window.clearTimeout(toastTimer.current)
-    toastTimer.current = window.setTimeout(() => setToast(''), 1500)
-  }, [data.version])
 
   const filtered = useMemo(() => {
     const q = keyword.trim().toLowerCase()

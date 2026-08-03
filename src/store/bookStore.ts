@@ -1,6 +1,7 @@
 import { DEFAULT_BOOKS, DEFAULT_CATEGORIES } from '../data/books'
 import type { AccessLevel, AppData, Book, Chapter } from '../types'
 import { createId as makeId } from '../utils/id'
+import { fetchRemoteData } from './remote'
 
 const STORAGE_KEY = 'book-catalog-data-v1'
 const AUTH_KEY = 'book-catalog-admin-auth'
@@ -36,7 +37,6 @@ function notifyAll() {
   }
 }
 
-/** 同页 + 跨标签页实时同步（无需手动刷新） */
 export function subscribe(listener: Listener) {
   listeners.add(listener)
   getChannel()
@@ -52,7 +52,7 @@ export function subscribe(listener: Listener) {
   }
 }
 
-function defaultData(): AppData {
+export function defaultData(): AppData {
   return {
     categories: [...DEFAULT_CATEGORIES],
     books: structuredClone(DEFAULT_BOOKS),
@@ -76,8 +76,27 @@ export function loadData(): AppData {
 
 export function saveData(data: AppData) {
   data.version = (data.version || 0) + 1
+  data.updatedAt = Date.now()
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
   notifyAll()
+}
+
+/** 用远程数据覆盖本地缓存（不额外抬高 version） */
+export function applyRemoteData(data: AppData) {
+  const next: AppData = {
+    ...data,
+    version: data.version || 1,
+    updatedAt: data.updatedAt || Date.now(),
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+  notifyAll()
+  return next
+}
+
+/** App 端：从 GitHub 拉最新数据，别人手机也能看到同一份 */
+export async function syncFromRemote() {
+  const remote = await fetchRemoteData()
+  return applyRemoteData(remote)
 }
 
 export function resetData() {
