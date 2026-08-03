@@ -1,15 +1,16 @@
 export type AccessLevel = '免费' | '需权限' | '推荐'
-export type BookType = 'text' | 'video'
+export type BookType = 'text' | 'video' | 'image'
 
 export interface Chapter {
   id: string
   title: string
-  /** 章节正文（图文书） */
+  /** 图文正文 */
   content?: string
-  /** 视频地址（视频书，支持 mp4 / webm 直链） */
+  /** 视频地址 */
   videoUrl?: string
-  /** 时长（秒） */
   duration?: number
+  /** 章节图片（含 PDF 扫描转成的页面），dataURL */
+  images?: string[]
   children?: Chapter[]
 }
 
@@ -20,12 +21,12 @@ export interface Book {
   description: string
   category: string
   access: AccessLevel
-  /** 书籍类型：图文 / 视频 */
+  /** 图文 / 视频 / 图片(含扫描件) */
   type?: BookType
-  /** 封面：压缩后的 dataURL 或外链 */
   cover?: string
-  /** 作者 */
   author?: string
+  /** 展示用日期 */
+  date?: string
   chapters: Chapter[]
   updatedAt?: number
 }
@@ -35,6 +36,7 @@ export interface AppData {
   books: Book[]
   version?: number
   updatedAt?: number
+  favorites?: string[]
 }
 
 export interface FlatChapter {
@@ -44,4 +46,5 @@ export interface FlatChapter {
   path: string
   videoUrl?: string
   duration?: number
+  images?: string[]
 }

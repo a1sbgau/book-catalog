@@ -82,12 +82,16 @@ function normalizeChapters(list: unknown[]): Chapter[] {
               ? c.url
               : undefined
       const duration = typeof c.duration === 'number' ? c.duration : undefined
+      const images = Array.isArray(c.images)
+        ? (c.images as unknown[]).filter((x): x is string => typeof x === 'string')
+        : undefined
       return {
         id: typeof c.id === 'string' ? c.id : createId('ch'),
         title,
         content,
         videoUrl,
         duration,
+        images,
         children: children?.length ? children : undefined,
       } satisfies Chapter
     })
@@ -233,6 +237,7 @@ export function flattenChapters(chapters: Chapter[]): FlatChapter[] {
           path: `${ch.title} / ${child.title}`,
           videoUrl: child.videoUrl || ch.videoUrl,
           duration: child.duration ?? ch.duration,
+          images: child.images?.length ? child.images : ch.images,
         })
       }
     } else {
@@ -243,6 +248,7 @@ export function flattenChapters(chapters: Chapter[]): FlatChapter[] {
         path: ch.title,
         videoUrl: ch.videoUrl,
         duration: ch.duration,
+        images: ch.images,
       })
     }
   }
@@ -262,9 +268,16 @@ export function formatDuration(seconds?: number) {
 
 export function isVideoBook(book: Book) {
   if (book.type === 'video') return true
-  if (book.type === 'text') return false
+  if (book.type === 'text' || book.type === 'image') return false
   const flat = flattenChapters(book.chapters)
   return flat.length > 0 && flat.every((c) => !!c.videoUrl)
+}
+
+export function isImageBook(book: Book) {
+  if (book.type === 'image') return true
+  if (book.type === 'video' || book.type === 'text') return false
+  const flat = flattenChapters(book.chapters)
+  return flat.length > 0 && flat.some((c) => (c.images?.length || 0) > 0)
 }
 
 export function countWords(book: Book) {

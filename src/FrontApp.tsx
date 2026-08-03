@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { AccessLevel, AppData, Book } from './types'
-import { loadData, subscribe, syncFromRemote } from './store/bookStore'
-import { countWords, flattenChapters, isVideoBook } from './utils/contentParser'
+import { loadData, subscribe } from './store/bookStore'
+import { countWords, flattenChapters, isImageBook, isVideoBook } from './utils/contentParser'
+import ImageReaderPage from './ImageReaderPage'
 import VideoBookPage from './VideoBookPage'
 import './App.css'
 
-type TabKey = 'home' | 'category'
+type TabKey = 'home' | 'category' | 'admin'
 type View =
   | { name: 'tabs' }
   | { name: 'detail'; bookId: string }
   | { name: 'reader'; bookId: string; chapterId?: string }
   | { name: 'video'; bookId: string; chapterId?: string }
+  | { name: 'image'; bookId: string; chapterId?: string }
 
 function useAppData() {
   const [data, setData] = useState<AppData>(() => loadData())
@@ -51,6 +53,15 @@ function CategoryIcon({ active }: { active: boolean }) {
       <rect x="13" y="3" width="8" height="8" rx="1.5" />
       <rect x="3" y="13" width="8" height="8" rx="1.5" />
       <rect x="13" y="13" width="8" height="8" rx="1.5" />
+    </svg>
+  )
+}
+
+function AdminIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" fill={active ? 'currentColor' : 'none'} />
+      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
     </svg>
   )
 }
@@ -265,7 +276,7 @@ function BookDetailPage({
           onClick={() => onRead(flat[0]?.id)}
           disabled={flat.length === 0}
         >
-          开始阅读
+          {isImageBook(book) ? '查看图片' : isVideoBook(book) ? '开始播放' : '开始阅读'}
         </button>
       </div>
 
@@ -377,50 +388,7 @@ export default function FrontApp() {
   const [keyword, setKeyword] = useState('')
   const [category, setCategory] = useState('全部')
   const [view, setView] = useState<View>({ name: 'tabs' })
-  const [toast, setToast] = useState('')
-  const toastTimer = useRef<number | null>(null)
-  const lastRemoteVersion = useRef<number | null>(null)
-
-  const showToast = (msg: string) => {
-    setToast(msg)
-    if (toastTimer.current) window.clearTimeout(toastTimer.current)
-    toastTimer.current = window.setTimeout(() => setToast(''), 1600)
-  }
-
-  // 所有人（含手机）共用 GitHub 远程数据
-  useEffect(() => {
-    let cancelled = false
-
-    const pull = async (silent: boolean) => {
-      try {
-        const remote = await syncFromRemote()
-        if (cancelled) return
-        const ver = remote.version || 0
-        if (lastRemoteVersion.current !== null && ver !== lastRemoteVersion.current) {
-          showToast('已更新为最新书库')
-        }
-        lastRemoteVersion.current = ver
-        if (!silent && lastRemoteVersion.current === ver) {
-          /* first load ok */
-        }
-      } catch {
-        if (!silent) showToast('线上数据暂不可用，已显示本地缓存')
-      }
-    }
-
-    void pull(true)
-    const timer = window.setInterval(() => void pull(true), 30000)
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') void pull(true)
-    }
-    document.addEventListener('visibilitychange', onVisible)
-
-    return () => {
-      cancelled = true
-      window.clearInterval(timer)
-      document.removeEventListener('visibilitychange', onVisible)
-    }
-  }, [])
+  const [toast] = useState('')
 
   useEffect(() => {
     if (category !== '全部' && !data.categories.includes(category)) {
@@ -455,9 +423,13 @@ export default function FrontApp() {
   }, [view, currentBook])
 
   const openBook = (book: Book) => {
+    const first = flattenChapters(book.chapters)[0]
     if (isVideoBook(book)) {
-      const first = flattenChapters(book.chapters)[0]
       setView({ name: 'video', bookId: book.id, chapterId: first?.id })
+      return
+    }
+    if (isImageBook(book)) {
+      setView({ name: 'image', bookId: book.id, chapterId: first?.id })
       return
     }
     setView({ name: 'detail', bookId: book.id })
@@ -469,7 +441,15 @@ export default function FrontApp() {
         <BookDetailPage
           book={currentBook}
           onBack={() => setView({ name: 'tabs' })}
-          onRead={(chapterId) => setView({ name: 'reader', bookId: currentBook.id, chapterId })}
+          onRead={(chapterId) => {
+            if (isImageBook(currentBook)) {
+              setView({ name: 'image', bookId: currentBook.id, chapterId })
+            } else if (isVideoBook(currentBook)) {
+              setView({ name: 'video', bookId: currentBook.id, chapterId })
+            } else {
+              setView({ name: 'reader', bookId: currentBook.id, chapterId })
+            }
+          }}
         />
       )}
 
@@ -488,6 +468,15 @@ export default function FrontApp() {
           chapterId={view.chapterId}
           onBack={() => setView({ name: 'tabs' })}
           onChangeChapter={(id) => setView({ name: 'video', bookId: currentBook.id, chapterId: id })}
+        />
+      )}
+
+      {view.name === 'image' && currentBook && (
+        <ImageReaderPage
+          book={currentBook}
+          chapterId={view.chapterId}
+          onBack={() => setView({ name: 'tabs' })}
+          onChangeChapter={(id) => setView({ name: 'image', bookId: currentBook.id, chapterId: id })}
         />
       )}
 
@@ -512,6 +501,14 @@ export default function FrontApp() {
                 onOpenBook={openBook}
               />
             )}
+            {tab === 'admin' && (
+              <div className="admin-entry-page">
+                <h2>内容管理</h2>
+                <p>在手机上上传图片、扫描 PDF、管理书籍，全部保存在本机。</p>
+                <a className="official-primary admin-entry-btn" href="#/admin">进入后台</a>
+                <p className="admin-entry-tip">默认密码：admin123</p>
+              </div>
+            )}
           </div>
 
           <nav className="tab-bar">
@@ -530,6 +527,14 @@ export default function FrontApp() {
             >
               <CategoryIcon active={tab === 'category'} />
               <span>分类</span>
+            </button>
+            <button
+              type="button"
+              className={`tab-item${tab === 'admin' ? ' active' : ''}`}
+              onClick={() => setTab('admin')}
+            >
+              <AdminIcon active={tab === 'admin'} />
+              <span>后台</span>
             </button>
           </nav>
         </>
