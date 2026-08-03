@@ -96,8 +96,8 @@ function HomePage({
   onOpenBook: (b: Book) => void
   onGoCategory: () => void
 }) {
-  const recommended = books.filter((b) => b.access === '推荐').slice(0, 6)
-  const free = books.filter((b) => b.access === '免费').slice(0, 6)
+  const recommended = books.filter((b) => b.access === '推荐').slice(0, 4)
+  const free = books.filter((b) => b.access === '免费').slice(0, 4)
 
   return (
     <div className="home-page">
@@ -111,15 +111,15 @@ function HomePage({
           <h2>精选推荐</h2>
           <button type="button" className="link-btn" onClick={onGoCategory}>查看全部分类</button>
         </div>
-        <div className="home-grid">
+        <div className="home-card-list">
           {recommended.length === 0 ? (
             <div className="empty-state">暂无推荐内容</div>
           ) : (
             recommended.map((book) => (
-              <button key={book.id} type="button" className="home-cover-card" onClick={() => onOpenBook(book)}>
-                <Cover book={book} />
-                <div className="home-cover-title">{book.title}</div>
-                <div className="home-cover-sub">{book.category}</div>
+              <button key={book.id} type="button" className="home-book-card" onClick={() => onOpenBook(book)}>
+                <div className="home-book-cat">{book.category}</div>
+                <div className="book-title">{book.title}</div>
+                <div className="book-desc">{book.series}</div>
               </button>
             ))
           )}
@@ -130,24 +130,20 @@ function HomePage({
         <div className="home-section-head">
           <h2>免费阅读</h2>
         </div>
-        <div className="home-grid">
+        <div className="home-card-list">
           {free.length === 0 ? (
             <div className="empty-state">暂无免费内容</div>
           ) : (
             free.map((book) => (
-              <button key={book.id} type="button" className="home-cover-card" onClick={() => onOpenBook(book)}>
-                <Cover book={book} />
-                <div className="home-cover-title">{book.title}</div>
-                <div className="home-cover-sub">{book.category}</div>
+              <button key={book.id} type="button" className="home-book-card" onClick={() => onOpenBook(book)}>
+                <div className="home-book-cat">{book.category}</div>
+                <div className="book-title">{book.title}</div>
+                <div className="book-desc">{book.series}</div>
               </button>
             ))
           )}
         </div>
       </section>
-
-      <div className="home-admin-entry">
-        <a href="#/admin">电脑端管理后台 →</a>
-      </div>
     </div>
   )
 }
